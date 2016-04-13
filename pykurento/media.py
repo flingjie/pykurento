@@ -42,6 +42,9 @@ class MediaObject(object):
   def release(self):
     return self.get_transport().release(self.id)
 
+  def get_session_id(self):
+    return self.get_transport().current_id
+
 
 class MediaPipeline(MediaObject):
   def get_pipeline(self):
@@ -55,6 +58,15 @@ class MediaElement(MediaObject):
 
   def connect(self, sink):
     return self.invoke("connect", sink=sink.id)
+
+  def on_ice_candidate(self, fn):
+    return self.subscribe('OnIceCandidate', fn)
+
+  def add_candidate(self, candidate):
+    return self.invoke('addIceCandidate', candidate=candidate)
+
+  def gather_candidates(self):
+    return self.invoke('gatherCandidates')
 
   def disconnect(self, sink):
     return self.invoke("disconnect", sink=sink.id)

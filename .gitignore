@@ -1,4 +1,5 @@
 *.pyc
+.idea/*
 .pypirc
 dist/
 pykurento.egg-info/

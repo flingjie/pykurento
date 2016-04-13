@@ -90,9 +90,9 @@ class KurentoTransport(object):
       if (resp['method'] == 'onEvent'
           and 'params' in resp
           and 'value' in resp['params']
-          and 'subscription' in resp['params']
-          and resp['params']['subscription'] in self.subscriptions):
-        sub_id = resp['params']['subscription']
+          and 'object' in resp['params']['value']
+          and resp['params']['value']['object'] in self.subscriptions):
+        sub_id = resp['params']['value']['object']
         fn = self.subscriptions[sub_id]
         self.session_id = resp['params']['sessionId'] if 'sessionId' in resp['params'] else self.session_id
         fn(resp["params"]["value"])
@@ -145,7 +145,7 @@ class KurentoTransport(object):
 
   def subscribe(self, object_id, event_type, fn):
     subscription_id = self._rpc("subscribe", object=object_id, type=event_type)
-    self.subscriptions[subscription_id] = fn
+    self.subscriptions[object_id] = fn
     return subscription_id
 
   def unsubscribe(self, subscription_id):

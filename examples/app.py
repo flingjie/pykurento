@@ -6,6 +6,7 @@ import logging
 import signal
 import tornado.ioloop
 import tornado.web
+import tornado.httpserver
 
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -15,25 +16,35 @@ from examples import render_view
 import examples.loopback.handlers
 import examples.rooms.handlers
 import examples.multires.handlers
+import examples.one2many.handlers
 
 
 class IndexHandler(tornado.web.RequestHandler):
   def get(self):
     render_view(self, "index")
 
+BASE_PATH = os.path.dirname(__file__)
+
 application = tornado.web.Application([
   (r"/", IndexHandler),
   (r"/loopback", examples.loopback.handlers.LoopbackHandler),
   (r"/multires", examples.multires.handlers.MultiResHandler),
+  (r"/one2many", examples.one2many.handlers.One2ManyHandler),
+  (r"/call", examples.one2many.handlers.CallHandler),
   (r"/room", examples.rooms.handlers.RoomIndexHandler),
   (r"/room/(?P<room_id>\d*)", examples.rooms.handlers.RoomHandler),
   (r"/room/(?P<room_id>[^/]*)/subscribe/(?P<from_participant_id>[^/]*)/(?P<to_participant_id>[^/]*)", examples.rooms.handlers.SubscribeToParticipantHandler),
-  (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': os.path.join(os.path.dirname(__file__), "static")}),
+  (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': os.path.join(BASE_PATH, "static")}),
 ], debug=True)
 
 if __name__ == "__main__":
   port = int(os.environ.get("PORT", 8080))
-  application.listen(port)
+  ssl_options = {
+    "certfile": os.path.join(BASE_PATH, "keys/server.crt"),
+    "keyfile": os.path.join(BASE_PATH, "keys/server.key"),
+  }
+  http_server = tornado.httpserver.HTTPServer(application, ssl_options=ssl_options)
+  http_server.listen(port)
   print "Webserver now listening on port %d" % port
   ioloop = tornado.ioloop.IOLoop.instance()
   signal.signal(signal.SIGINT, lambda sig, frame: ioloop.stop())
